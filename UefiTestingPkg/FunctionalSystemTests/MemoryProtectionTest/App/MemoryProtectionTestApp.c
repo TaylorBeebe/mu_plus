@@ -61,6 +61,7 @@ MEMORY_PROTECTION_NONSTOP_MODE_PROTOCOL  *mNonstopModeProtocol          = NULL;
 MEMORY_PROTECTION_DEBUG_PROTOCOL         *mMemoryProtectionProtocol     = NULL;
 EFI_MEMORY_ATTRIBUTE_PROTOCOL            *mMemoryAttributeProtocol      = NULL;
 CPU_MP_DEBUG_PROTOCOL                    *mCpuMpDebugProtocol           = NULL;
+UINT8                                    mOverwriteArray[32];
 
 /// ================================================================================================
 /// ================================================================================================
@@ -356,6 +357,32 @@ GetIgnoreNextEx (
   ExPersistGetIgnoreNextPageFault (&Result);
 
   return Result;
+}
+
+/**
+  Checks if stack cookies are active.
+
+  @param[in]  Context         The context of the test.
+
+  @retval UNIT_TEST_PASSED    NX protection is active.
+  @retval UNIT_TEST_SKIPPED   NX protection is not active.
+**/
+UNIT_TEST_STATUS
+EFIAPI
+UefiStackCookieTest (
+  IN UNIT_TEST_CONTEXT  Context
+  )
+{
+  UINT8  StackArray[16];
+
+  DEBUG ((DEBUG_INFO, "%a() - Enter\n", __FUNCTION__));
+
+  // for (INTN Index = 0; Index < (sizeof (UINT32) * 64); Index += sizeof (UINT32)) {
+  //   DEBUG ((DEBUG_INFO, "%08x\n", *((UINTN *)((UINTN)&StackArray + Index))));
+  // }
+
+  CopyMem (&StackArray, &mOverwriteArray, sizeof (mOverwriteArray));
+  return UNIT_TEST_PASSED;
 }
 
 /**
@@ -2586,6 +2613,8 @@ MemoryProtectionTestAppEntryPoint (
     goto EXIT;
   }
 
+  ZeroMem (mOverwriteArray, sizeof (mOverwriteArray));
+
   // Create separate test suites for Page, Pool, and NX tests. The Misc test suite is for stack guard
   // and null pointer testing.
   CreateUnitTestSuite (&Misc, Fw, "Stack Guard and Null Pointer Detection", "Security.HeapGuardMisc", NULL, NULL);
@@ -2645,7 +2674,7 @@ MemoryProtectionTestAppEntryPoint (
   AddTestCase (Misc, "Check that loaded images have proper attributes set", "Security.HeapGuardMisc.ImageProtectionEnabled", ImageProtection, ImageProtectionPreReq, NULL, MemoryProtectionContext);
   AddTestCase (NxProtection, "Check hardware configuration of HardwareNxProtection bit", "Security.HeapGuardMisc.UefiHardwareNxProtectionEnabled", UefiHardwareNxProtectionEnabled, UefiHardwareNxProtectionEnabledPreReq, NULL, MemoryProtectionContext);
   AddTestCase (NxProtection, "Stack NX Protection", "Security.HeapGuardMisc.UefiNxStackGuard", UefiNxStackGuard, NULL, NULL, MemoryProtectionContext);
-
+  AddTestCase (Misc, "Check that security cookies are active", "Security.HeapGuardMisc.MemoryProtectionPolicy", UefiStackCookieTest, NULL, NULL, MemoryProtectionContext);
   // Execute the tests.
   Status = RunAllTestSuites (Fw);
 
