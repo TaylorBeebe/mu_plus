@@ -84,3 +84,4 @@
   # Removing optimization prevents the invalid opcode instruction from being inserted and enables
   # the interrupt handler to clear the fault and return to the test.
   GCC:*_GCC5_X64_CC_FLAGS = -O0
+  GCC:*_*_*_CC_FLAGS = -fstack-protector-all

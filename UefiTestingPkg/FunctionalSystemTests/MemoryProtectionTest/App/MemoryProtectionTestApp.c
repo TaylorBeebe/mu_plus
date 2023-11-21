@@ -377,8 +377,8 @@ UefiStackCookieTest (
 
   DEBUG ((DEBUG_INFO, "%a() - Enter\n", __FUNCTION__));
 
-  // for (INTN Index = 0; Index < (sizeof (UINT32) * 64); Index += sizeof (UINT32)) {
-  //   DEBUG ((DEBUG_INFO, "%08x\n", *((UINTN *)((UINTN)&StackArray + Index))));
+  // for (UINTN Index = 0; Index < (sizeof (UINT64) * 32); Index += sizeof (UINT64)) {
+  //   DEBUG ((DEBUG_INFO, "0x%016Lx\n", *((UINT64 *)((UINTN)&StackArray + Index))));
   // }
 
   CopyMem (&StackArray, &mOverwriteArray, sizeof (mOverwriteArray));
@@ -723,7 +723,7 @@ UefiNxProtectionPreReq (
 {
   MEMORY_PROTECTION_TEST_CONTEXT  MemoryProtectionContext = (*(MEMORY_PROTECTION_TEST_CONTEXT *)Context);
 
-  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiMaxMemoryType);
+  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiUnacceptedMemoryType);
   if (!GetDxeMemoryTypeSettingFromBitfield ((EFI_MEMORY_TYPE)MemoryProtectionContext.TargetMemoryType, mDxeMps.NxProtectionPolicy)) {
     UT_LOG_WARNING ("Protection for this memory type is disabled: %a", MEMORY_TYPES[MemoryProtectionContext.TargetMemoryType]);
     return UNIT_TEST_SKIPPED;
@@ -764,7 +764,7 @@ UefiPageGuardPreReq (
 {
   MEMORY_PROTECTION_TEST_CONTEXT  MemoryProtectionContext = (*(MEMORY_PROTECTION_TEST_CONTEXT *)Context);
 
-  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiMaxMemoryType);
+  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiUnacceptedMemoryType);
   if (!(mDxeMps.HeapGuardPolicy.Fields.UefiPageGuard &&
         GetDxeMemoryTypeSettingFromBitfield ((EFI_MEMORY_TYPE)MemoryProtectionContext.TargetMemoryType, mDxeMps.HeapGuardPageType)))
   {
@@ -801,7 +801,7 @@ UefiPoolGuardPreReq (
 {
   MEMORY_PROTECTION_TEST_CONTEXT  MemoryProtectionContext = (*(MEMORY_PROTECTION_TEST_CONTEXT *)Context);
 
-  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiMaxMemoryType);
+  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiUnacceptedMemoryType);
   if (!(mDxeMps.HeapGuardPolicy.Fields.UefiPoolGuard &&
         GetDxeMemoryTypeSettingFromBitfield ((EFI_MEMORY_TYPE)MemoryProtectionContext.TargetMemoryType, mDxeMps.HeapGuardPoolType)))
   {
@@ -882,7 +882,7 @@ SmmPageGuardPreReq (
 {
   MEMORY_PROTECTION_TEST_CONTEXT  MemoryProtectionContext = (*(MEMORY_PROTECTION_TEST_CONTEXT *)Context);
 
-  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiMaxMemoryType);
+  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiUnacceptedMemoryType);
   if (!(mMmMps.HeapGuardPolicy.Fields.MmPageGuard &&
         GetMmMemoryTypeSettingFromBitfield ((EFI_MEMORY_TYPE)MemoryProtectionContext.TargetMemoryType, mMmMps.HeapGuardPageType)))
   {
@@ -919,7 +919,7 @@ SmmPoolGuardPreReq (
 {
   MEMORY_PROTECTION_TEST_CONTEXT  MemoryProtectionContext = (*(MEMORY_PROTECTION_TEST_CONTEXT *)Context);
 
-  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiMaxMemoryType);
+  UT_ASSERT_TRUE (MemoryProtectionContext.TargetMemoryType < EfiUnacceptedMemoryType);
   if (!(mMmMps.HeapGuardPolicy.Fields.MmPoolGuard &&
         GetMmMemoryTypeSettingFromBitfield ((EFI_MEMORY_TYPE)MemoryProtectionContext.TargetMemoryType, mMmMps.HeapGuardPoolType)))
   {
@@ -2147,7 +2147,7 @@ AddUefiNxTest (
   DEBUG ((DEBUG_INFO, "%a() - Enter\n", __FUNCTION__));
 
   // Need to generate a test case for each memory type.
-  for (Index = 0; Index < EfiMaxMemoryType; Index++) {
+  for (Index = 0; Index < EfiUnacceptedMemoryType; Index++) {
     MemoryProtectionContext =  (MEMORY_PROTECTION_TEST_CONTEXT *)AllocateZeroPool (sizeof (MEMORY_PROTECTION_TEST_CONTEXT));
     if (MemoryProtectionContext == NULL) {
       DEBUG ((DEBUG_ERROR, "%a - Allocating memory for test context failed.\n", __FUNCTION__));
@@ -2212,7 +2212,7 @@ AddUefiPoolTest (
   DEBUG ((DEBUG_INFO, "%a() - Enter\n", __FUNCTION__));
 
   // Need to generate a test case for each memory type.
-  for (Index = 0; Index < EfiMaxMemoryType; Index++) {
+  for (Index = 0; Index < EfiUnacceptedMemoryType; Index++) {
     MemoryProtectionContext =  (MEMORY_PROTECTION_TEST_CONTEXT *)AllocateZeroPool (sizeof (MEMORY_PROTECTION_TEST_CONTEXT));
     if (MemoryProtectionContext == NULL) {
       DEBUG ((DEBUG_ERROR, "%a - Allocating memory for test context failed.\n", __FUNCTION__));
@@ -2276,7 +2276,7 @@ AddUefiPageTest (
   DEBUG ((DEBUG_INFO, "%a() - Enter\n", __FUNCTION__));
 
   // Need to generate a test case for each memory type.
-  for (Index = 0; Index < EfiMaxMemoryType; Index++) {
+  for (Index = 0; Index < EfiUnacceptedMemoryType; Index++) {
     MemoryProtectionContext =  (MEMORY_PROTECTION_TEST_CONTEXT *)AllocateZeroPool (sizeof (MEMORY_PROTECTION_TEST_CONTEXT));
     if (MemoryProtectionContext == NULL) {
       DEBUG ((DEBUG_ERROR, "%a - Allocating memory for test context failed.\n", __FUNCTION__));
@@ -2337,7 +2337,7 @@ AddSmmPoolTest (
   UINTN                           TestDescriptionSize;
 
   // Need to generate a test case for each memory type.
-  for (Index = 0; Index < EfiMaxMemoryType; Index++) {
+  for (Index = 0; Index < EfiUnacceptedMemoryType; Index++) {
     MemoryProtectionContext =  (MEMORY_PROTECTION_TEST_CONTEXT *)AllocateZeroPool (sizeof (MEMORY_PROTECTION_TEST_CONTEXT));
     if (MemoryProtectionContext == NULL) {
       DEBUG ((DEBUG_ERROR, "%a - Allocating memory for test context failed.\n", __FUNCTION__));
@@ -2397,7 +2397,7 @@ AddSmmPageTest (
   UINTN                           TestDescriptionSize;
 
   // Need to generate a test case for each memory type.
-  for (Index = 0; Index < EfiMaxMemoryType; Index++) {
+  for (Index = 0; Index < EfiUnacceptedMemoryType; Index++) {
     MemoryProtectionContext =  (MEMORY_PROTECTION_TEST_CONTEXT *)AllocateZeroPool (sizeof (MEMORY_PROTECTION_TEST_CONTEXT));
     if (MemoryProtectionContext == NULL) {
       DEBUG ((DEBUG_ERROR, "%a - Allocating memory for test context failed.\n", __FUNCTION__));
