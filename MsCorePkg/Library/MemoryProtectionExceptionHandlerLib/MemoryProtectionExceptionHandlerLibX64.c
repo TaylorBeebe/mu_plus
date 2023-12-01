@@ -127,7 +127,7 @@ MemoryProtectionExceptionHandler (
       ));
   }
 
-  ResetWarm ();
+  ResetShutdown ();
 }
 
 /**

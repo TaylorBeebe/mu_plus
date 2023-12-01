@@ -64,6 +64,9 @@ UINTN                  mEfiMemoryMapDescriptorSize = 0;
 // Global for the flat page table
 PAGE_MAP  mMap = { 0 };
 
+// Global for the MemoryAttributeProtocol
+EFI_MEMORY_ATTRIBUTE_PROTOCOL  *mMemoryAttributeProtocol = NULL;
+
 // -------------------------------------------------
 //    GLOBALS SUPPORT FUNCTIONS
 // -------------------------------------------------
@@ -428,6 +431,32 @@ PopulateEfiMemoryMap (
 }
 
 /**
+ BEEBE TODO
+**/
+STATIC
+EFI_STATUS
+PopulateMemoryAttributeProtocol (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+
+  if (mMemoryAttributeProtocol != NULL) {
+    return EFI_SUCCESS;
+  }
+
+  Status = gBS->LocateProtocol (
+                  &gEfiMemoryAttributeProtocolGuid,
+                  NULL,
+                  (VOID **)&mMemoryAttributeProtocol
+                  );
+
+  UT_ASSERT_NOT_EFI_ERROR (Status);
+
+  return Status;
+}
+
+/**
   Checks the input flat page/translation table for the input region and converts the associated
   table entries to EFI access attributes.
 
@@ -460,6 +489,7 @@ GetRegionCommonAccessAttributes (
     return EFI_INVALID_PARAMETER;
   }
 
+  DEBUG ((DEBUG_INFO, "%a:%d - Looking for 0x%llx - 0x%llx\n", __FUNCTION__, __LINE__, Address, Address + Length - 1));
   FoundRange      = FALSE;
   Index           = 0;
   InputEndAddress = 0;
@@ -485,6 +515,7 @@ GetRegionCommonAccessAttributes (
       if (!FoundRange) {
         *Attributes = EFI_MEMORY_ACCESS_MASK;
         FoundRange  = TRUE;
+        DEBUG ((DEBUG_INFO, "%a:%d - Found range: 0x%llx - 0x%llx\n", __FUNCTION__, __LINE__, EntryStartAddress, EntryEndAddress));
       }
 
       if (IsPageExecutable (Map->Entries[Index].PageEntry)) {
@@ -842,6 +873,8 @@ UnallocatedMemoryIsRP (
   UT_ASSERT_NOT_NULL (mEfiMemoryMap);
   UT_ASSERT_NOT_EFI_ERROR (PopulatePageTableMap ());
   UT_ASSERT_NOT_NULL (mMap.Entries);
+  UT_ASSERT_NOT_EFI_ERROR (PopulateMemoryAttributeProtocol ());
+  UT_ASSERT_NOT_NULL (mMemoryAttributeProtocol);
 
   TestFailure = FALSE;
 
@@ -867,10 +900,31 @@ UnallocatedMemoryIsRP (
           TestFailure = TRUE;
         } else if ((Attributes & EFI_MEMORY_RP) == 0) {
           UT_LOG_ERROR (
-            "Memory Range 0x%llx-0x%llx is not EFI_MEMORY_RP\n",
+            "Memory Range 0x%llx-0x%llx is not EFI_MEMORY_RP. Attributes: 0x%llx\n",
             EfiMemoryMapEntry->PhysicalStart,
-            EfiMemoryMapEntry->PhysicalStart + (EfiMemoryMapEntry->NumberOfPages * EFI_PAGE_SIZE)
+            EfiMemoryMapEntry->PhysicalStart + (EfiMemoryMapEntry->NumberOfPages * EFI_PAGE_SIZE),
+            Attributes
             );
+          DEBUG ((
+            DEBUG_INFO,
+            "Memory Range 0x%llx-0x%llx is not EFI_MEMORY_RP. Attributes: 0x%llx\n",
+            EfiMemoryMapEntry->PhysicalStart,
+            EfiMemoryMapEntry->PhysicalStart + (EfiMemoryMapEntry->NumberOfPages * EFI_PAGE_SIZE),
+            Attributes
+            ));
+          mMemoryAttributeProtocol->GetMemoryAttributes (
+                                      mMemoryAttributeProtocol,
+                                      EfiMemoryMapEntry->PhysicalStart,
+                                      EfiMemoryMapEntry->NumberOfPages * EFI_PAGE_SIZE,
+                                      &Attributes
+                                      );
+          DEBUG ((
+            DEBUG_INFO,
+            "Memory Attribute Protocol Result for 0x%llx - 0x%llx. Attributes: 0x%llx\n",
+            EfiMemoryMapEntry->PhysicalStart,
+            EfiMemoryMapEntry->PhysicalStart + (EfiMemoryMapEntry->NumberOfPages * EFI_PAGE_SIZE),
+            Attributes
+            ));
           TestFailure = TRUE;
         }
       }
